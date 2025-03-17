@@ -15,7 +15,6 @@ const getQueryClient = () => {
     if (!queryClient) {
         queryClient = new QueryClient();
     }
-
     return queryClient;
 };
 

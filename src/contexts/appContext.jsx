@@ -10,7 +10,6 @@ export const useAppContext = () => {
     if (!context) {
         throw new Error("useAppContext must be used within an AppProvider");
     }
-
     return context;
 };
 
@@ -50,7 +49,6 @@ export const AppProvider = ({ children }) => {
 
     useEffect(() => {
         if (!maxSupply || !baseTokenURI) return;
-        // const tokenIds = Array.from({ length: Number(maxSupply) }, (_, i) => i);
 
         const tokenIds = [];
         for (let i = 0; i < maxSupply; i++) {
@@ -60,8 +58,10 @@ export const AppProvider = ({ children }) => {
         const promises = tokenIds.map((id) => {
             return fetch(`${baseTokenURI}${id}.json`)
                 .then((response) => response.json())
-                .then((data) => {
-                    return data;
+                .then((data) => data)
+                .catch((error) => {
+                    console.error(`Error fetching metadata for token ${id}:`, error);
+                    return null; // Return null for failed fetches
                 });
         });
 
@@ -69,17 +69,20 @@ export const AppProvider = ({ children }) => {
             .then((responses) => {
                 const tokenMetaData = new Map();
                 responses.forEach((response, index) => {
-                    tokenMetaData.set(index, response);
+                    if (response) {
+                        tokenMetaData.set(index, response);
+                    }
                 });
                 setTokenMetaData(tokenMetaData);
             })
-            .catch((error) => console.error("error: ", error));
+            .catch((error) => console.error("Error setting token metadata:", error));
     }, [baseTokenURI, maxSupply]);
 
     return (
         <appContext.Provider
             value={{
                 nextTokenId,
+                setNextTokenId,
                 maxSupply,
                 baseTokenURI,
                 tokenMetaData,
